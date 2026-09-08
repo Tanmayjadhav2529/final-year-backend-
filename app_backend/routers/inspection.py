@@ -58,7 +58,8 @@ async def inspect_image(
     # Run inspection
     result = run_inspection(
         image=image_bytes,
-        model=model
+        model=model,
+        image_path=image_path
     )
 
     return {
