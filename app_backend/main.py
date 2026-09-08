@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
 
 from config import MODEL_PATH
-from routers import inspection
+from routers import inspection, analytics, report
 
 
 @asynccontextmanager
@@ -64,3 +64,5 @@ def health_check():
 
 # Inspection API
 app.include_router(inspection.router)
+app.include_router(analytics.router)
+app.include_router(report.router)
