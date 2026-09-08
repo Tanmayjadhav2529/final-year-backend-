@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Request
+from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 
 from services.inspection_service import save_image, run_inspection
 
@@ -9,18 +9,47 @@ router = APIRouter(
 )
 
 
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
 @router.post("/")
 async def inspect_image(
     request: Request,
     file: UploadFile = File(...)
 ):
-    # Read uploaded image
+
+    # Check file extension
+    filename = file.filename or ""
+    extension = filename.lower().rsplit(".", 1)[-1]
+
+    if f".{extension}" not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPG, JPEG, and PNG images are allowed."
+        )
+
+    # Read uploaded file
     image_bytes = await file.read()
+
+    # Check file size
+    if len(image_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="Image size must be less than 5 MB."
+        )
+
+    # Check empty file
+    if len(image_bytes) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is empty."
+        )
 
     # Save image locally
     image_path = save_image(
         image_bytes,
-        file.filename
+        filename
     )
 
     # Get YOLO model loaded in main.py
